@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-restapi
+spec:
+  replicas: {{ .Values.restapireplicaCount }}
+  template:
+    metadata:
+      name: python-app
+      labels:
+        app: python-app
+    spec:
+      containers:
+      - name: python
+        image: python:3
+        workingDir: /usr/src/app
+        envFrom:
+          - configMapRef:
+              name: {{ .Release.Name }}-restapi-database-con
+          - secretRef:
+              name: {{ .Release.Name }}-restapi-database-pass
+        command: ["/bin/bash","-c","git clone https://github.com/hmadadian/nokia.git && pip install --no-cache-dir -r ./nokia/requirements.txt && cd ./nokia && python ./main.py"]
+        ports:
+          - containerPort: {{ .Values.restapiContainerPort }}
+  selector:
+    matchLabels:
+      app: python-app
